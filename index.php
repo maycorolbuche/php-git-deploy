@@ -1,25 +1,26 @@
 <?php
-$remote_repository = 'maycorolbuche/repo_teste';
-$local_dir = 'sss/asa';
-$branch = 'main';
-
-
-
 $cmd = [];
 
-if (!is_dir($local_dir)) {
-    $cmd[] = sprintf(
-        'git clone --depth=1 --branch %s https://github.com/%s %s',
-        $branch,
-        $remote_repository,
-        $local_dir
-    );
-} else {
-    $cmd[] = sprintf(
-        'cd %s && git pull origin %s',
-        $local_dir,
-        $branch
-    );
+$deploy = json_decode(file_get_contents('deploy.json'), true);
+foreach ($deploy as $d) {
+    $remote_repository = $d['remote_repository'];
+    $local_dir = $d['local_dir'];
+    $branch = $d['branch'];
+
+    if (!is_dir($local_dir)) {
+        $cmd[] = sprintf(
+            'git clone --depth=1 --branch %s https://github.com/%s %s',
+            $branch,
+            $remote_repository,
+            $local_dir
+        );
+    } else {
+        $cmd[] = sprintf(
+            'cd %s && git pull origin %s',
+            $local_dir,
+            $branch
+        );
+    }
 }
 ?>
 
