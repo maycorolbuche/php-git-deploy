@@ -105,7 +105,7 @@ foreach ($cmd as $data) {
     }
     echo "\n";
 }
-?>
+?>...
     </pre>
 </body>
 
