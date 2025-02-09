@@ -7,7 +7,7 @@ foreach ($deploy as $d) {
     $local_dir = $d['local_dir'];
     $branch = $d['branch'];
 
-    if (!is_dir($local_dir)) {
+    if ($local_dir <> "" && !is_dir($local_dir)) {
         $cmd[] = sprintf(
             'git clone --depth=1 --branch %s https://github.com/%s %s',
             $branch,
@@ -15,11 +15,18 @@ foreach ($deploy as $d) {
             $local_dir
         );
     } else {
-        $cmd[] = sprintf(
-            'cd %s && git pull origin %s',
-            $local_dir,
-            $branch
-        );
+        if ($local_dir <> "") {
+            $cmd[] = sprintf(
+                'cd %s && git pull origin %s',
+                $local_dir,
+                $branch
+            );
+        } else {
+            $cmd[] = sprintf(
+                'git pull origin %s',
+                $branch
+            );
+        }
     }
 }
 ?>
