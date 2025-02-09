@@ -34,11 +34,20 @@ foreach ($deploy as $d) {
     } else {
         if ($local_dir <> "") {
             $cmd[$i]['commands'][] = sprintf(
+                'cd %s && git reset --hard',
+                $local_dir
+            );
+
+            $cmd[$i]['commands'][] = sprintf(
                 'cd %s && git pull origin %s',
                 $local_dir,
                 $branch
             );
         } else {
+            $cmd[$i]['commands'][] = sprintf(
+                'git reset --hard'
+            );
+
             $cmd[$i]['commands'][] = sprintf(
                 'git pull origin %s',
                 $branch
@@ -106,9 +115,7 @@ foreach ($cmd as $data) {
         $tmp = array();
         exec($command . ' 2>&1', $tmp, $return_code);
         printf(
-            '<span class="prompt">$</span> <span class="command">%s</span>
-            <div class="output">%s</div>
-            ',
+            '<span class="prompt">$</span> <span class="command">%s</span><div class="output">%s</div>',
             htmlentities(trim($command)),
             htmlentities(trim(implode("\n", $tmp)))
         );
