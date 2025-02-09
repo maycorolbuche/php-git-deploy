@@ -1,8 +1,15 @@
 <?php
+$get_remote = filter_input(INPUT_GET, 'remote', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
 $cmd = [];
 
 $i = 0;
 $deploy = json_decode(file_get_contents('deploy.json'), true);
+if ($get_remote <> "") {
+    $deploy = array_filter($deploy, function ($d) use ($get_remote) {
+        return $d['remote_repository'] === $get_remote;
+    });
+}
 foreach ($deploy as $d) {
     $remote_repository = $d['remote_repository'];
     $local_dir = $d['local_dir'];
