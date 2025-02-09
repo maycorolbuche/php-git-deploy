@@ -1,0 +1,12 @@
+[
+    {
+        "remote_repository": "maycorolbuche/php-git-deploy",
+        "local_dir": "git-deploy",
+        "branch": "main"
+    },
+    {
+        "remote_repository": "maycorolbuche/repo_teste",
+        "local_dir": "git/repo_teste",
+        "branch": "master"
+    }
+]
