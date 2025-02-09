@@ -1,6 +1,10 @@
 <?php
 $get_remote = filter_input(INPUT_GET, 'remote', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
+if (!defined('TIME_LIMIT')) define('TIME_LIMIT', 30);
+
+
+
 $cmd = [];
 
 $i = 0;
@@ -14,14 +18,16 @@ foreach ($deploy as $d) {
     $remote_repository = $d['remote_repository'];
     $local_dir = $d['local_dir'];
     $branch = $d['branch'];
+    $token = $d['token'];
 
     $cmd[$i]['data'] = $d;
     $cmd[$i]['commands'] = [];
 
     if ($local_dir <> "" && !is_dir($local_dir)) {
         $cmd[$i]['commands'][] = sprintf(
-            'git clone --depth=1 --branch %s https://github.com/%s %s',
+            'git clone --depth=1 --branch %s https://%sgithub.com/%s %s',
             $branch,
+            ($token <> "") ? "$token@" : "",
             $remote_repository,
             $local_dir
         );
@@ -94,13 +100,27 @@ foreach ($deploy as $d) {
 foreach ($cmd as $data) {
     echo "<span class='title'># " . $data["data"]["remote_repository"] . "</span> ";
     echo "<span class='branch'>" . $data["data"]["branch"] . "</span>\n";
-    foreach ($data["commands"] as $c) {
-        echo "<span class='prompt'>$</span> <span class='command'>$c</span>\n";
-        $output = shell_exec($c);
-        if ($output <> "") {
-            echo "<span class='output'>$output</span>\n";
-        } else {
-            echo "<span class='error'>Error</span>\n";
+    foreach ($data["commands"] as $command) {
+
+        set_time_limit(TIME_LIMIT);
+        $tmp = array();
+        exec($command . ' 2>&1', $tmp, $return_code);
+        printf(
+            '<span class="prompt">$</span> <span class="command">%s</span>
+            <div class="output">%s</div>
+            ',
+            htmlentities(trim($command)),
+            htmlentities(trim(implode("\n", $tmp)))
+        );
+        $output .= ob_get_contents();
+        ob_flush();
+
+        // Error handling and cleanup
+        if ($return_code !== 0) {
+            printf(
+                '<div class="error">Error encountered! code: %s</div>',
+                $return_code
+            );
         }
     }
     echo "\n";

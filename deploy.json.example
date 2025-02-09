@@ -7,6 +7,7 @@
     {
         "remote_repository": "maycorolbuche/repo_teste",
         "local_dir": "git/repo_teste",
-        "branch": "master"
+        "branch": "master",
+        "token":"<TOKEN>"
     }
 ]
