@@ -129,6 +129,7 @@ foreach ($cmd as $data) {
                 $return_code
             );
         }
+        echo "\n";
     }
     echo "\n";
 }
