@@ -8,6 +8,9 @@
         "remote_repository": "maycorolbuche/repo_teste",
         "local_dir": "git/repo_teste",
         "branch": "master",
-        "token":"<TOKEN>"
+        "token":"<TOKEN>",
+        "commands": [
+            "composer install --no-dev"
+        ]
     }
 ]
