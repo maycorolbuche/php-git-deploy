@@ -19,6 +19,7 @@ foreach ($deploy as $d) {
     $local_dir = $d['local_dir'];
     $branch = $d['branch'];
     $token = $d['token'];
+    $commands = $d['commands'] ?? [];
 
     $cmd[$i]['data'] = $d;
     $cmd[$i]['commands'] = [];
@@ -51,6 +52,21 @@ foreach ($deploy as $d) {
             $cmd[$i]['commands'][] = sprintf(
                 'git pull origin %s',
                 $branch
+            );
+        }
+    }
+
+    foreach ($commands as $command) {
+        if ($local_dir <> "") {
+            $cmd[$i]['commands'][] = sprintf(
+                'cd %s && %s',
+                $local_dir,
+                $command
+            );
+        } else {
+            $cmd[$i]['commands'][] = sprintf(
+                '%s',
+                $command
             );
         }
     }
