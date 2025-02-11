@@ -130,6 +130,7 @@ foreach ($cmd as $data) {
 
     $telegram_message = "";
     $telegram_message .= "🟢 <b>" . $data["data"]["remote_repository"] . "</b>\n";
+    $telegram_message .= "🔗 https://github.com/" . $data["data"]["branch"] . "\n";
     $telegram_message .= "🔅 " . $data["data"]["branch"] . "\n";
 
     foreach ($data["commands"] as $command) {
