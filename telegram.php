@@ -8,6 +8,7 @@ function sendTelegramMessage($botToken, $chatID, $mensagem)
     $dados = [
         'chat_id' => $chatID,
         'text' => $mensagem,
+        'parse_mode' => 'HTML',
     ];
 
     // Inicializa o cURL

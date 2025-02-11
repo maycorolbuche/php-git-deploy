@@ -127,7 +127,11 @@ foreach ($deploy as $d) {
 foreach ($cmd as $data) {
     echo "<span class='title'># " . $data["data"]["remote_repository"] . "</span> ";
     echo "<span class='branch'>" . $data["data"]["branch"] . "</span>\n";
-    $telegram_message = $data["data"]["remote_repository"] . "-" . $data["data"]["branch"];
+
+    $telegram_message = "";
+    $telegram_message .= "🟢 <b>" . $data["data"]["remote_repository"] . "</b>\n";
+    $telegram_message .= "🔅 " . $data["data"]["branch"] . "\n";
+
     foreach ($data["commands"] as $command) {
 
         set_time_limit(TIME_LIMIT);
@@ -139,8 +143,8 @@ foreach ($cmd as $data) {
             htmlentities(trim(implode("\n", $tmp)))
         );
 
-        $telegram_message .= $command;
-        $telegram_message .= $tmp;
+        $telegram_message .= "<pre>" . trim($command) . "</pre>\n";
+        $telegram_message .= "<code>" .  trim(implode("\n", $tmp)) . "</code>\n\n";
 
         $output .= ob_get_contents();
         ob_flush();
