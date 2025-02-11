@@ -8,9 +8,15 @@
         "remote_repository": "maycorolbuche/repo_teste",
         "local_dir": "git/repo_teste",
         "branch": "master",
-        "token":"<TOKEN>",
+        "token":"123456",
         "commands": [
             "composer install --no-dev"
+        ],
+        "telegram": [
+            {
+                "bot_token": "123456:ABcdEF",
+                "chat_id": "-100123456"
+            }
         ]
     }
 ]

@@ -1,4 +1,6 @@
 <?php
+require_once('telegram.php');
+
 $get_remote = filter_input(INPUT_GET, 'remote', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
 if (!defined('TIME_LIMIT')) define('TIME_LIMIT', 30);
@@ -125,6 +127,7 @@ foreach ($deploy as $d) {
 foreach ($cmd as $data) {
     echo "<span class='title'># " . $data["data"]["remote_repository"] . "</span> ";
     echo "<span class='branch'>" . $data["data"]["branch"] . "</span>\n";
+    $telegram_message = $data["data"]["remote_repository"] . "-" . $data["data"]["branch"];
     foreach ($data["commands"] as $command) {
 
         set_time_limit(TIME_LIMIT);
@@ -135,6 +138,10 @@ foreach ($cmd as $data) {
             htmlentities(trim($command)),
             htmlentities(trim(implode("\n", $tmp)))
         );
+
+        $telegram_message .= $command;
+        $telegram_message .= $tmp;
+
         $output .= ob_get_contents();
         ob_flush();
 
@@ -148,6 +155,10 @@ foreach ($cmd as $data) {
         echo "\n";
     }
     echo "\n";
+
+    foreach ($data["data"]["telegram"] ?? [] as $telegram) {
+        sendTelegramMessage($telegram["bot_token"], $telegram["chat_id"], $telegram_message);
+    }
 }
 ?>
     </pre>
