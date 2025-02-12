@@ -84,6 +84,8 @@ foreach ($deploy as $d) {
     <meta charset="utf-8">
     <meta name="robots" content="noindex">
     <title>Logs</title>
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+
     <style>
         body {
             padding: 0 1em;
