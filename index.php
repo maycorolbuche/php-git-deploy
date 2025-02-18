@@ -163,8 +163,10 @@ foreach ($cmd as $data) {
     }
     echo "\n";
 
-    foreach ($data["data"]["telegram"] ?? [] as $telegram) {
-        sendTelegramMessage($telegram["bot_token"], $telegram["chat_id"], $telegram_message);
+    if ($get_remote <> "") {
+        foreach ($data["data"]["telegram"] ?? [] as $telegram) {
+            sendTelegramMessage($telegram["bot_token"], $telegram["chat_id"], $telegram_message);
+        }
     }
 }
 ?>
