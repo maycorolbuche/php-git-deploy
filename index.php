@@ -2,6 +2,7 @@
 require_once('telegram.php');
 
 $get_remote = filter_input(INPUT_GET, 'remote', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$force = filter_input(INPUT_GET, 'force', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
 if (!defined('TIME_LIMIT')) define('TIME_LIMIT', 30);
 
@@ -42,9 +43,10 @@ foreach ($deploy as $d) {
             );
 
             $cmd[$i]['commands'][] = sprintf(
-                'cd %s && git pull origin %s',
+                'cd %s && git pull origin %s %s',
                 $local_dir,
-                $branch
+                $branch,
+                ($force == "true") ? "--force" : ""
             );
         } else {
             $cmd[$i]['commands'][] = sprintf(
@@ -52,8 +54,9 @@ foreach ($deploy as $d) {
             );
 
             $cmd[$i]['commands'][] = sprintf(
-                'git pull origin %s',
-                $branch
+                'git pull origin %s %s',
+                $branch,
+                ($force == "true") ? "--force" : ""
             );
         }
     }
