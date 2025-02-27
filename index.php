@@ -21,7 +21,7 @@ foreach ($deploy as $d) {
     $remote_repository = $d['remote_repository'];
     $local_dir = $d['local_dir'];
     $branch = $d['branch'];
-    $token = $d['token'];
+    $token = $d['token'] ?? "";
     $commands = $d['commands'] ?? [];
 
     $cmd[$i]['data'] = $d;
@@ -129,6 +129,7 @@ foreach ($deploy as $d) {
     <pre>
 
 <?php
+$output = "";
 foreach ($cmd as $data) {
     echo "<span class='title'># " . $data["data"]["remote_repository"] . "</span> ";
     echo "<span class='branch'>" . $data["data"]["branch"] . "</span>\n";
@@ -139,6 +140,7 @@ foreach ($cmd as $data) {
     $telegram_message .= "🔅 " . $data["data"]["branch"] . "\n";
 
     foreach ($data["commands"] as $command) {
+        $output = "";
 
         set_time_limit(TIME_LIMIT);
         $tmp = array();
