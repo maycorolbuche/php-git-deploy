@@ -51,7 +51,7 @@ if ($status != "true") {
                 );
             } else {
                 $cmd[$i]['commands'][] = sprintf(
-                    'git reset --hard'
+                    'git reset --hard origin/main'
                 );
 
                 $cmd[$i]['commands'][] = sprintf(
