@@ -39,8 +39,9 @@ if ($status != "true") {
         } else {
             if ($local_dir <> "") {
                 $cmd[$i]['commands'][] = sprintf(
-                    'cd %s && git reset --hard origin/main',
-                    $local_dir
+                    'cd %s && git reset --hard origin/%s',
+                    $local_dir,
+                    $branch,
                 );
 
                 $cmd[$i]['commands'][] = sprintf(
@@ -51,7 +52,8 @@ if ($status != "true") {
                 );
             } else {
                 $cmd[$i]['commands'][] = sprintf(
-                    'git reset --hard origin/main'
+                    'git reset --hard origin/%s',
+                    $branch,
                 );
 
                 $cmd[$i]['commands'][] = sprintf(
