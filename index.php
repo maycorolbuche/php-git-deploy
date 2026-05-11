@@ -39,7 +39,7 @@ if ($status != "true") {
         } else {
             if ($local_dir <> "") {
                 $cmd[$i]['commands'][] = sprintf(
-                    'cd %s && git reset --hard',
+                    'cd %s && git reset --hard origin/main',
                     $local_dir
                 );
 
