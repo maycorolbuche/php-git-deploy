@@ -17,6 +17,10 @@ RewriteRule ^\.git - [F,L]
     Require all denied
 </FilesMatch>
 
+<Files "deploy.json">
+    Require all denied
+</Files>
+
 # Bloqueia acesso direto a qualquer arquivo PHP, exceto os necessários
 RewriteCond %{THE_REQUEST} \.php [NC]
 RewriteCond %{REQUEST_URI} !/(index)\.php$ [NC]
