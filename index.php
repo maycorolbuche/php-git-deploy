@@ -19,64 +19,49 @@ if ($status != "true") {
         });
     }
     foreach ($deploy as $d) {
-        $remote_repository = $d['remote_repository'];
-        $local_dir = $d['local_dir'];
-        $branch = $d['branch'];
-        $token = $d['token'] ?? "";
-        $commands = $d['commands'] ?? [];
+        $remoteRepository = $d['remote_repository'];
+        $localDir = $d['local_dir'];
+        $branch = escapeshellarg($d['branch']);
+        $token = $d['token'] ?? '';
+        $remoteUrl = 'https://github.com/' . $remoteRepository;
+        $directory = $localDir !== '' ? 'cd ' . escapeshellarg($localDir) . ' && ' : '';
+
+        $git = 'GIT_TERMINAL_PROMPT=0 git';
+        if ($token !== '') {
+            // Supply the token only to Git's credential helper, without writing it to origin.
+            $helper = <<<'SH'
+!f() { if [ "$1" = get ]; then printf 'username=x-access-token\npassword=%s\n' "$PHP_GIT_DEPLOY_TOKEN"; fi; }; f
+SH;
+            $git .= ' -c credential.helper= -c credential.useHttpPath=true -c '
+                . escapeshellarg('credential.' . $remoteUrl . '.helper=' . $helper);
+        }
 
         $cmd[$i]['data'] = $d;
         $cmd[$i]['commands'] = [];
 
-        if ($local_dir <> "" && !is_dir($local_dir)) {
-            $cmd[$i]['commands'][] = sprintf(
-                'git clone --depth=1 --branch %s https://%sgithub.com/%s %s',
-                $branch,
-                ($token <> "") ? "$token@" : "",
-                $remote_repository,
-                $local_dir
-            );
+        if ($localDir !== '' && !is_dir($localDir)) {
+            $cmd[$i]['commands'][] = [
+                $git . ' clone --depth=1 --branch ' . $branch . ' -- '
+                    . escapeshellarg($remoteUrl) . ' ' . escapeshellarg($localDir),
+                true,
+            ];
         } else {
-            if ($local_dir <> "") {
-                $cmd[$i]['commands'][] = sprintf(
-                    'cd %s && git reset --hard origin/%s',
-                    $local_dir,
-                    $branch,
-                );
-
-                $cmd[$i]['commands'][] = sprintf(
-                    'cd %s && git pull origin %s %s',
-                    $local_dir,
-                    $branch,
-                    ($force == "true") ? "--force" : ""
-                );
-            } else {
-                $cmd[$i]['commands'][] = sprintf(
-                    'git reset --hard origin/%s',
-                    $branch,
-                );
-
-                $cmd[$i]['commands'][] = sprintf(
-                    'git pull origin %s %s',
-                    $branch,
-                    ($force == "true") ? "--force" : ""
-                );
-            }
+            $cmd[$i]['commands'][] = [
+                $directory . 'git remote set-url origin ' . escapeshellarg($remoteUrl),
+                false,
+            ];
+            $cmd[$i]['commands'][] = [
+                $directory . 'git reset --hard ' . escapeshellarg('origin/' . $d['branch']),
+                false,
+            ];
+            $cmd[$i]['commands'][] = [
+                $directory . $git . ' pull ' . ($force === 'true' ? '--force ' : '') . 'origin ' . $branch,
+                true,
+            ];
         }
 
-        foreach ($commands as $command) {
-            if ($local_dir <> "") {
-                $cmd[$i]['commands'][] = sprintf(
-                    'cd %s && %s',
-                    $local_dir,
-                    $command
-                );
-            } else {
-                $cmd[$i]['commands'][] = sprintf(
-                    '%s',
-                    $command
-                );
-            }
+        foreach ($d['commands'] ?? [] as $command) {
+            $cmd[$i]['commands'][] = [$directory . $command, false];
         }
 
         $i++;
@@ -144,20 +129,46 @@ if ($status != "true") {
         $telegram_message .= "🔗 https://github.com/" . $data["data"]["remote_repository"] . "\n";
         $telegram_message .= "🔅 " . $data["data"]["branch"] . "\n";
 
-        foreach ($data["commands"] as $command) {
+        $token = $data['data']['token'] ?? '';
+        foreach ($data["commands"] as [$command, $authenticate]) {
             $output = "";
 
             set_time_limit(TIME_LIMIT);
             $tmp = array();
-            exec($command . ' 2>&1', $tmp, $return_code);
+            $useToken = $authenticate && $token !== '';
+            if ($useToken) {
+                $previousToken = getenv('PHP_GIT_DEPLOY_TOKEN');
+                putenv('PHP_GIT_DEPLOY_TOKEN=' . $token);
+            }
+
+            try {
+                exec($command . ' 2>&1', $tmp, $return_code);
+            } finally {
+                if ($useToken) {
+                    putenv($previousToken === false
+                        ? 'PHP_GIT_DEPLOY_TOKEN'
+                        : 'PHP_GIT_DEPLOY_TOKEN=' . $previousToken);
+                }
+            }
+
+            $loggedCommand = trim($command);
+            $loggedOutput = trim(implode("\n", $tmp));
+            // Hide credentials embedded in legacy URLs or echoed by a command.
+            $loggedCommand = preg_replace('~(https?://)[^/\s@]+@~i', '$1[redacted]@', $loggedCommand);
+            $loggedOutput = preg_replace('~(https?://)[^/\s@]+@~i', '$1[redacted]@', $loggedOutput);
+            if ($token !== '') {
+                $secrets = [$token, rawurlencode($token)];
+                $loggedCommand = str_replace($secrets, '[redacted]', $loggedCommand);
+                $loggedOutput = str_replace($secrets, '[redacted]', $loggedOutput);
+            }
             printf(
                 '<span class="prompt">$</span> <span class="command">%s</span><div class="output">%s</div>',
-                htmlentities(trim($command)),
-                htmlentities(trim(implode("\n", $tmp)))
+                htmlentities($loggedCommand),
+                htmlentities($loggedOutput)
             );
 
-            $telegram_message .= "<pre>" . trim($command) . "</pre>\n";
-            $telegram_message .= "<code>" .  trim(implode("\n", $tmp)) . "</code>\n\n";
+            $telegram_message .= "<pre>" . htmlspecialchars($loggedCommand) . "</pre>\n";
+            $telegram_message .= "<code>" .  htmlspecialchars($loggedOutput) . "</code>\n\n";
 
             $output .= ob_get_contents();
             ob_flush();
@@ -168,6 +179,8 @@ if ($status != "true") {
                     '<div class="error">Error encountered! code: %s</div>',
                     $return_code
                 );
+                $telegram_message = preg_replace('/^🟢/u', '🔴', $telegram_message);
+                break;
             }
             echo "\n";
         }
