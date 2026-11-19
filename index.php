@@ -51,12 +51,12 @@ SH;
                 false,
             ];
             $cmd[$i]['commands'][] = [
-                $directory . 'git reset --hard ' . escapeshellarg('origin/' . $d['branch']),
-                false,
+                $directory . $git . ' fetch ' . ($force === 'true' ? '--force ' : '') . 'origin ' . $branch,
+                true,
             ];
             $cmd[$i]['commands'][] = [
-                $directory . $git . ' pull ' . ($force === 'true' ? '--force ' : '') . 'origin ' . $branch,
-                true,
+                $directory . 'git reset --hard FETCH_HEAD',
+                false,
             ];
         }
 

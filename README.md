@@ -18,7 +18,7 @@ Para um repositório público, omita o campo `token`. Para um repositório priva
 2. Dê um nome ao token, por exemplo `Deploy cPanel`, e defina a validade.
 3. Em **Resource owner**, escolha a conta ou organização dona do repositório de destino.
 4. Em **Repository access**, escolha **Only select repositories** e selecione os repositórios privados que serão baixados. Por exemplo, para publicar `maycorolbuche/mdawiki-site`, selecione `mdawiki-site`.
-5. Em **Permissions → Repository permissions**, selecione **Contents → Read-only**. O GitHub inclui **Metadata → Read-only** automaticamente. As operações padrão de clone e pull usam apenas leitura.
+5. Em **Permissions → Repository permissions**, selecione **Contents → Read-only**. O GitHub inclui **Metadata → Read-only** automaticamente. As operações padrão de clone e fetch usam apenas leitura.
 6. Clique em **Generate token** e copie o valor gerado para o campo `token` da entrada correspondente no `deploy.json`. Se a organização exigir aprovação, aguarde a liberação do token para acessar o repositório privado.
 
 Guarde o token no servidor e mantenha `deploy.json` fora do Git. Comandos personalizados que acessam outros serviços ou repositórios precisam das próprias credenciais.
@@ -46,7 +46,7 @@ O arquivo deve conter uma lista JSON com uma entrada por projeto. Exemplo para u
 | `local_dir` | Caminho no servidor. Prefira o caminho absoluto para evitar ambiguidades. Se o diretório final ainda não existir, o script faz o clone. Se existir, deve ser um clone Git com o remoto `origin` e a branch de acompanhamento correspondente. Uma string vazia usa o diretório de trabalho do PHP. |
 | `branch` | Nome exato da branch, como `main`. Em clones existentes, deixe a branch configurada já em uso no diretório. |
 | `token` | Token do GitHub para repositórios privados. Pode ser omitido para repositórios públicos. |
-| `commands` | Lista opcional de comandos de shell executados após o clone ou pull, no diretório do projeto. Exemplo: `["composer install --no-dev"]`. Os executáveis usados precisam estar disponíveis para o PHP. |
+| `commands` | Lista opcional de comandos de shell executados após o clone ou a atualização, no diretório do projeto. Exemplo: `["composer install --no-dev"]`. Os executáveis usados precisam estar disponíveis para o PHP. |
 | `telegram` | Lista opcional de destinos. Cada destino tem `bot_token` e `chat_id`. |
 
 Para receber o log no Telegram, crie um bot com o **@BotFather**, inicie uma conversa com ele ou adicione-o ao grupo de destino com permissão para enviar mensagens. Inclua, na entrada do projeto, um campo como `"telegram": [{"bot_token": "TOKEN_DO_BOT", "chat_id": "-1001234567890"}]`. O envio ocorre em chamadas que informam `remote`.
@@ -61,9 +61,9 @@ Para receber o log no Telegram, crie um bot com o **@BotFather**, inicie uma con
 | --- | --- |
 | `status=true` | Retorna `Ok` sem executar deploy. |
 | `remote=dono/repositorio` | Executa somente as entradas com esse `remote_repository`. Sem `remote`, executa todas as entradas. |
-| `force=true` | Acrescenta `--force` ao `git pull` em clones existentes. |
+| `force=true` | Acrescenta `--force` ao `git fetch` em clones existentes. A sobrescrita de arquivos ocorre também sem esse parâmetro. |
 
-Em clones existentes, o script executa `git reset --hard origin/<branch>` antes do pull. Esse reset descarta alterações locais em arquivos rastreados mesmo sem `force=true`. Use um clone dedicado ao deploy e mantenha dados de produção e configurações locais fora dos arquivos rastreados.
+Em clones existentes, o script baixa a branch com `git fetch` e aplica o commit baixado com `git reset --hard FETCH_HEAD`. O reset descarta alterações em arquivos rastreados e sobrescreve arquivos locais que ocupem caminhos da versão remota. Arquivos locais fora desses caminhos, como um `.env` mantido fora do Git, são preservados. Se o fetch falhar, o script interrompe o deploy antes do reset. Use um clone dedicado ao deploy e mantenha dados de produção e configurações locais fora dos caminhos versionados.
 
 ### Agendamento
 
@@ -85,7 +85,6 @@ O endpoint atual não interpreta a carga útil de webhooks do GitHub. Para autom
 | `could not read Password` com `TOKEN@github.com` | A instalação antiga usava o token como nome de usuário. Atualize o script e informe o token válido no `deploy.json`. |
 | `Authentication failed`, `403` ou `Repository not found` | Confira o valor de `remote_repository`, a validade do token, **Contents → Read-only**, a seleção do repositório e eventual aprovação pela organização. |
 | `not a git repository` ou `No such remote 'origin'` | Confira se `local_dir` aponta para um clone existente com `origin`. Para clonar do zero, use um destino que ainda não exista. |
-| `ambiguous argument 'origin/main'` | Confira se a branch configurada corresponde à branch já clonada e se existe a referência local de acompanhamento `origin/main` ou equivalente. |
 | `git: not found`, erro de `exec()` ou `Permission denied` | Confira se o Git está no `PATH` do PHP, se a hospedagem permite as funções necessárias e se o usuário do PHP tem acesso de escrita ao destino. |
 | O filtro `remote` não executa nenhum comando | Confira se o valor na URL é idêntico ao `remote_repository` cadastrado. |
 | O deploy executa, mas o Telegram não recebe | Use uma URL com `remote` e confira a extensão cURL, o acesso a `api.telegram.org`, o token do bot, o ID do chat e a permissão de envio. |
