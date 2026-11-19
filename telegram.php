@@ -1,5 +1,5 @@
 <?php
-function sendTelegramMessage($botToken, $chatID, $mensagem)
+function sendTelegramMessage($botToken, $chatID, $threadId, $mensagem)
 {
     // URL da API do Telegram para enviar mensagens
     $url = "https://api.telegram.org/bot{$botToken}/sendMessage";
@@ -10,6 +10,12 @@ function sendTelegramMessage($botToken, $chatID, $mensagem)
         'text' => $mensagem,
         'parse_mode' => 'HTML',
     ];
+
+
+    // Adiciona o tópico somente se informado
+    if (!empty($threadId)) {
+        $dados['message_thread_id'] = $threadId;
+    }
 
     // Inicializa o cURL
     $ch = curl_init();

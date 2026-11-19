@@ -188,7 +188,7 @@ if ($status != "true") {
 
         if ($get_remote <> "") {
             foreach ($data["data"]["telegram"] ?? [] as $telegram) {
-                sendTelegramMessage($telegram["bot_token"], $telegram["chat_id"], $telegram_message);
+                sendTelegramMessage($telegram["bot_token"], $telegram["chat_id"], @$telegram["thread_id"], $telegram_message);
             }
         }
     }
